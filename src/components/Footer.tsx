@@ -26,7 +26,7 @@ const Footer = () => {
         <FaGithub className='text-white w-[24px] h-[24px] hover:text-red-400 transition duration-300'/>
       </Link>
 
-      <Link href='https://docs.google.com/document/d/1isOFrJjXX5RgszFXIiCk-pD5DxdsRGCq/edit?usp=sharing&ouid=109647652489584908099&rtpof=true&sd=true' rel='noreferrer noopener' target='__blank'>
+      <Link href='/Akhil_Krishnamurthy_UT_Austin_Resume_2028.pdf' rel='noreferrer noopener' target='__blank'>
         <button className='relative rounded-md text-black border-none bg-white px-3 py-2 overflow-hidden group'>
           <span className='relative z-10 font-semibold group-hover:text-white transition-colors duration-500 flex flex-row items-center'>
             Resume
