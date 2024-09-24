@@ -17,11 +17,11 @@ export const projects = [
     project_link: 'https://devpost.com/software/medbot-ya9tkn'
   },
   {
-    name: 'RL Agent Trading',
-    skills: ['Python', 'Jupyter', 'Deep Learning', 'RL'],
-    description: 'Make money quick with stock bots and predictive forecasts 📈',
-    image_link: '',
-    project_link: 'https://github.com/AkhilKrishna16/algorithmic-trading',
+    name: 'FitKing',
+    skills: ['Flutter', 'Swift', 'C++', 'GCP'],
+    description: 'Get stronger and fitter with your friends 🏋️',
+    image_link: '/fitking_logo.png',
+    project_link: 'https://devpost.com/software/fitking',
   },
 ]
 
@@ -32,6 +32,13 @@ export const experiences = [
     description: 'Deployed dining hall applications for UT-Austin students and made easier access to food items.',
     image_link: '/lh-eats.jpeg',
     link: 'https://www.linkedin.com/company/lh-eats/'
+  },
+  {
+    name: 'Full-Stack Engineering Intern',
+    skills: ['Swift', 'Flutter', 'MongoDB'],
+    description: 'Developed flight training programs for pilot schools across the globe.',
+    image_link: '/orlando_o_spencer_i_inc_logo.jpeg',
+    link: 'https://www.linkedin.com/company/orlando-o-spencer-i-inc/posts/?feedView=all',
   },
   {
     name: 'Undergraduate Researcher',
