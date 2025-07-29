@@ -31,7 +31,6 @@ export const experiences = [
     skills: ['Python', 'AWS', 'SQL'],
     description: 'Deployed ServiceNow anomaly detection system through HDBScan and data analysis methods.',
     image_link: '/fidelity-logo.png',
-    link: 'https://www.fidelity.com/'
   },
   {
     name: 'SWE Intern',
