@@ -27,18 +27,25 @@ export const projects = [
 
 export const experiences = [
   {
+    name: 'SWE Intern',
+    skills: ['Python', 'AWS', 'SQL'],
+    description: 'Deployed ServiceNow anomaly detection system through HDBScan and data analysis methods.',
+    image_link: '/fidelity-logo.png',
+    link: 'https://www.fidelity.com/'
+  },
+  {
+    name: 'SWE Intern',
+    skills: ['ReactJS', 'Python', 'NodeJS'],
+    description: 'Created MVP platform for companies and developers to connect and build projects while hiring.', 
+    image_link: '/kinetik-logo.jpeg',
+    link: 'https://www.linkedin.com/company/kinetikgigs/'
+  },
+  {
     name: 'Product Developer',
     skills: ['Python', 'GCP', 'React Native'],
     description: 'Deployed dining hall applications for UT-Austin students and made easier access to food items.',
     image_link: '/lh-eats.jpeg',
     link: 'https://www.linkedin.com/company/lh-eats/'
-  },
-  {
-    name: 'Full-Stack Engineering Intern',
-    skills: ['Swift', 'Flutter', 'MongoDB'],
-    description: 'Developed flight training programs for pilot schools across the globe.',
-    image_link: '/orlando_o_spencer_i_inc_logo.jpeg',
-    link: 'https://www.linkedin.com/company/orlando-o-spencer-i-inc/posts/?feedView=all',
   },
   {
     name: 'Undergraduate Researcher',
