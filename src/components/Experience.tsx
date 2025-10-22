@@ -6,9 +6,9 @@ import Link from 'next/link'
 interface ExperienceProps {
   experience_name: string,
   experience_skills: string[],
-  experience_description: string,
+  experience_description: string | undefined,
   experience_image: string,
-  experience_link: string,
+  experience_link: string | undefined,
 }
 
 const Experience = ({experience_name, experience_skills, experience_description, experience_image, experience_link}: ExperienceProps) => {
