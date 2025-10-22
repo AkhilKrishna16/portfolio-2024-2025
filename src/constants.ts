@@ -1,5 +1,5 @@
 export const NAME = 'Akhil Krishnamurthy'
-export const JOB_TITLE = 'Software Developer | Quantitative Finance'
+export const JOB_TITLE = 'Software Developer | GPU Enthusiast'
 
 export const projects = [
   {

@@ -13,7 +13,7 @@ interface ExperienceProps {
 
 const Experience = ({experience_name, experience_skills, experience_description, experience_image, experience_link}: ExperienceProps) => {
   return (
-    <Link href={experience_link} rel='noreferrer noopener' target='__blank' className='bg-tab-color border-none w-3/4 flex flex-row items-center justify-between h-40 px-4 my-2 hover:scale-110 transition-all duration-300'>
+    <a href={experience_link} rel='noreferrer noopener' target='__blank' className='bg-tab-color border-none w-3/4 flex flex-row items-center justify-between h-40 px-4 my-2 hover:scale-110 transition-all duration-300'>
       <div className='left-side flex flex-col justify-between h-full py-2'>
         <div className='experience_header flex flex-col text-left'>
           <h2 className='text-white font-medium text-2xl'>
@@ -43,7 +43,7 @@ const Experience = ({experience_name, experience_skills, experience_description,
         </div>
         
       </div>
-    </Link>
+    </a>
       
   )
 }
