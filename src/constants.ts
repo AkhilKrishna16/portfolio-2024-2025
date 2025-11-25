@@ -18,7 +18,7 @@ export const projects = [
   {
     name: 'Wisconsin RAG Chatbot',
     skills: ['LangChain', 'Python', 'Next.js', 'AWS'],
-    description: 'Have questions about the law? Ask away 🚨',
+    description: 'Have questions about Wisconsin law? Ask away 🚨',
     image_link: '/code-four.png',
     project_link: 'https://github.com/AkhilKrishna16/take-home-wisconsin-rag',
   },
@@ -137,5 +137,20 @@ export const skills = [
   {
     name: 'GCP',
     image: 'gcp.webp'
+  },
+  {
+    name: 'CUDA',
+    image: 'cuda.png'
+  },
+  {
+    name: 'SQL',
+    image: 'mysql.png'
+  },{
+    name: 'Git',
+    image: 'git.jpg'
+  },
+  {
+    name: 'ReactJS',
+    image: 'react-js.png'
   }
 ]

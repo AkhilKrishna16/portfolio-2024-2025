@@ -12,6 +12,8 @@ import Ball from './Ball'
 import { skills } from '../constants'
 
 const Skills = () => {
+  const totalRows = Math.ceil(skills.length / 4)
+  const centerOffset = ((totalRows - 1) * 1.5) / 2
 
   return (
     <div className='h-[100vh] flex flex-col items-center justify-center'>
@@ -23,7 +25,8 @@ const Skills = () => {
         <group position={[-2, 0, 0]}>
           {skills.map((skill, index) => {
             const x = (index % 4) * 1.2
-            const y = -Math.floor(index / 4) * 1.5
+            const row = Math.floor(index / 4)
+            const y = -row * 1.5 + centerOffset
             return <Ball key={index} textureUrl={skill['image']} position={[x, y, 0]} label={skill['name']} index={index}/>
           })}
         </group>
