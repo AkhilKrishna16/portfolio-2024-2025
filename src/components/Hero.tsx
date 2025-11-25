@@ -23,18 +23,16 @@ const Hero = () => {
             </h3>
 
             <div className='mt-7 w-full text-gray-400 text-[15px]'>
-              I build software and ML projects at <span className='text-white text-[15px] underline hover:text-red-400 hover:font-semibold transition duration-300'>UT Austin</span> and explore option trading.
-              Currently, I&#8217;m working on ways to improve <span className='text-white text-[15px] underline hover:text-red-400 hover:font-semibold transition duration-300'>Longhorn Lunch</span> and updating the app.
+              I build software and ML projects at <span className='text-white text-[15px] underline hover:text-orange-400 hover:font-semibold transition duration-300'>UT Austin</span> and explore HPC (high-performance computing).
+              Currently, I&#8217;m working on ways to improve my <span className='text-white text-[15px] underline hover:text-red-400 hover:font-semibold transition duration-300'>Mandelbrot Set Generator</span> <br/> and updating the component.
 
               <br />
               <br />
 
-              In my free time, I like playing chess, going to the gym, and watching NBA games.
+              In my free time, I like playing poker, going to the gym, and watching the New England Patriots.
             </div>
           </div>
         </div>
-
-    
       </div> 
     </div>
   )

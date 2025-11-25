@@ -18,7 +18,7 @@ const Footer = () => {
       </a>
 
       <a
-        href="https://x.com/AkhilKrish70600"
+        href="https://x.com/akhil_krish_"
         rel="noopener noreferrer"
         target="_blank"
       >
@@ -34,7 +34,7 @@ const Footer = () => {
       </a>
 
       <a
-        href="/Akhil_Krishnamurthy_2026_Summer_Resume_Internships_2027.pdf"
+        href="/Akhil_Krishnamurthy_2026_Summer_Resume_Internships_2028 copy.pdf"
         rel="noopener noreferrer"
         target="_blank"
       >
