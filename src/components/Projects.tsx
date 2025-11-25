@@ -3,7 +3,7 @@ import React from 'react'
 import Project from '@/components/Project'
 
 import { projects } from '@/constants'
-
+// added fix here
 const Projects = () => {
   return (
     <div className='min-h-screen py-10 px-4 sm:px-6 lg:px-8'>
