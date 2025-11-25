@@ -3,11 +3,38 @@ export const JOB_TITLE = 'Software Developer | GPU Enthusiast'
 
 export const projects = [
   {
+    name: 'GPU-Based Mandelbrot Set Generator',
+    skills: ['CUDA', 'C', 'OpenMP', 'GPU'],
+    description: 'Optimized a CPU-version of a Mandelbrot Set Generator 🧮',
+    image_link: '/mandelbrot-set.jpeg',
+    project_link: 'https://www.linkedin.com/feed/update/urn:li:activity:7396971491789221888/'
+  },
+  {
+    name: 'PintOS',
+    skills: ['C', 'ASM', 'C++', 'Make'],
+    description: 'Created a functional OS with C for CS439 🤘',
+    image_link: '/texas-longhorns-logo.png',
+  },
+  {
+    name: 'Wisconsin RAG Chatbot',
+    skills: ['LangChain', 'Python', 'Next.js', 'AWS'],
+    description: 'Have questions about the law? Ask away 🚨',
+    image_link: '/code-four.png',
+    project_link: 'https://github.com/AkhilKrishna16/take-home-wisconsin-rag',
+  },
+  {
+    name: 'twoset api',
+    skills: ['Python', 'YFinance', 'AWS', 'Next.js'],
+    description: 'Get fast stock predictions on DL models 📈',
+    image_link: '/twoset-logo.jpeg',
+    project_link: 'https://github.com/AkhilKrishna16/twoset.ai'
+  },
+  {
     name: 'Longhorn Lunch',
     skills: ['TypeScript', 'NextJS', 'AWS', 'Python'],
-    description: 'Explore menu items at UT-Austin and express opinions 😋',
+    description: 'Explore menu items at UT 😋 (replaced by LHEats)',
     image_link: '/longhorn-lunch.png',
-    project_link: 'https://longhornlunch-app-orqv.vercel.app/'
+    project_link: 'https://github.com/AkhilKrishna16/longhornlunch-app'
   },
   {
     name: 'MedBot',
@@ -27,30 +54,52 @@ export const projects = [
 
 export const experiences = [
   {
-    name: 'SWE Intern',
-    skills: ['Python', 'AWS', 'SQL'],
-    description: 'Deployed ServiceNow anomaly detection system through HDBScan and data analysis methods.',
-    image_link: '/fidelity-logo.png',
+    job_title: 'SWE Intern',
+    company_name: 'CodeFour (YC X25)',
+    start_date: 'Aug 2025',
+    end_date: 'Oct 2025',
+    skills: ['Python', 'AWS', 'React.js'],
+    description: 'Backed police officers across the nation in analyzing artifacts and stopping crime through LLM search.',
+    image_link: '/code-four.png',
+    link: 'https://www.ycombinator.com/companies/code-four',
   },
   {
-    name: 'SWE Intern',
+    job_title: 'SWE Intern',
+    company_name: 'Fidelity Investments',
+    start_date: 'Jun 2025',
+    end_date: 'Aug 2025',
+    skills: ['Python', 'AWS', 'SQL'],
+    description: 'Automated detection for duplicate ServiceNow tickets to help Fidelity\'s collision center waste less time.',
+    image_link: '/fidelity-logo.png',
+    link: 'https://www.fidelity.com/',
+  },
+  {
+    job_title: 'SWE Intern',
+    company_name: 'Kinetik Gigs LLC',
+    start_date: 'Aug 2024',
+    end_date: 'Jan 2025',
     skills: ['ReactJS', 'Python', 'NodeJS'],
-    description: 'Created MVP platform for companies and developers to connect and build projects while hiring.', 
+    description: 'Revolutionized how freelancing and gig-hunting works so that more developers are developing.', 
     image_link: '/kinetik-logo.jpeg',
     link: 'https://www.linkedin.com/company/kinetikgigs/'
   },
   {
-    name: 'Product Developer',
+    job_title: 'Product Developer',
+    company_name: 'Longhorn Eats',
+    start_date: 'Aug 2024',
+    end_date: 'May 2025',
     skills: ['Python', 'GCP', 'React Native'],
-    description: 'Deployed dining hall applications for UT-Austin students and made easier access to food items.',
+    description: 'Attempted to replace UT Austin\'s dining app with 3000+ Longhorns backing us. Hook\' em horns! 🤘',
     image_link: '/lh-eats.jpeg',
     link: 'https://www.linkedin.com/company/lh-eats/'
   },
   {
-    name: 'Undergraduate Researcher',
+    job_title: 'Undergrad Researcher',
+    company_name: 'University of North Texas',
+    start_date: 'Aug 2022',
+    end_date: 'May 2024',
     skills: ['OpenCV', 'Python', 'MATLAB'],
-    description: 'Created human tracking model with depth camera and point clouds in OpenCV for physiotherapy.' 
-    + ' Optimized for self-occlusion and beat existing models by 40% in accuracy. Presented work at 3 conferences and won 2 awards.',
+    description: 'Created a human tracking model to assist in physiotherapy with a novel generation method.',
     image_link: '/unt-logo.png',
     link: 'https://sites.google.com/view/covis-unt/home?authuser=0'
   },

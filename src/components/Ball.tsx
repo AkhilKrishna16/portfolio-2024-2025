@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react'
-import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import React, { useRef, useState } from 'react'
+import { useFrame, useLoader } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader.js'
-import { OrbitControls, Html } from '@react-three/drei'
+import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 
 interface BallProps {

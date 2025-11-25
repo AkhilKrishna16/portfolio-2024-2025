@@ -13,36 +13,51 @@ interface ProjectProps {
 
 const Project = ({project_name, project_skills, project_description, project_image, project_link}: ProjectProps) => {
   return (
-    
-    <a href={project_link} target='__blank' rel='noreferrer noopener' className='bg-tab-color border-none w-3/4 flex flex-row items-center justify-between h-40 px-4 my-2 hover:scale-110 transition-all duration-300'>
-      <div className='left-side flex flex-col justify-between h-full py-2'>
-        <div className='project_header flex flex-col text-left'>
-          <h2 className='text-white font-medium text-2xl'>
-            {project_name.toLowerCase().split('').map((char, charIndex) => {
-              return <span key={charIndex} className='hover:text-red-400 transition-all duration-200 cursor-default'>
-                {char}
-              </span>
-            })}
-          </h2>
-
-          <div className='flex flex-row gap-1 mt-1'>
-            {project_skills.map((value, index) => {
-                return <div key={index} className='text-[10px] tracking-[.20em] text-white'>{value.toUpperCase()} <span className='invisible xl:visible'>{index !== project_skills.length - 1 ? '|' : ''}</span></div>
+    <a 
+      href={project_link} 
+      target='_blank' 
+      rel='noreferrer noopener' 
+      className='block'
+    >
+      <div className='bg-tab-color border-none w-full h-[380px] flex flex-col overflow-hidden px-5 py-4 hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 rounded-lg cursor-pointer'>
+        <div className='flex flex-row items-start justify-between mb-3 flex-shrink-0'>
+          <div className='flex flex-col flex-1 pr-3 min-w-0'>
+            <h2 className='text-white font-bold text-xl mb-3 leading-tight'>
+              {project_name.split('').map((char, charIndex) => {
+                return <span key={charIndex} className='hover:text-red-400 transition-all duration-200 cursor-default'>
+                  {char}
+                </span>
               })}
+            </h2>
+
+            <div className='flex flex-col gap-1.5 mb-3'>
+              {project_skills.map((value, index) => {
+                  return (
+                    <span key={index} className='text-[10px] tracking-[.2em] text-gray-300 bg-gray-800/60 px-2.5 py-1 rounded w-fit border border-gray-700/40'>
+                      {value.toUpperCase()}
+                    </span>
+                  )
+                })}
+            </div>
           </div>
-            
+
+          {project_image && (
+            <div className='right-side w-20 h-20 flex items-center justify-center flex-shrink-0'>
+              <div className='relative w-full h-full'>
+                <Image 
+                  alt={`${project_name}_media`} 
+                  src={project_image} 
+                  fill
+                  className='object-contain'
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className='project_description text-sm mt-auto text-gray-400 mb-4'>
-          {project_description}
+        <div className='project_description text-sm text-gray-300 leading-relaxed mt-auto pt-2 border-t border-gray-700/30 max-h-[60px] overflow-hidden'>
+          <p className='line-clamp-3'>{project_description}</p>
         </div>
-      </div>
-
-      <div className='right-side w-1/2 h-full flex items-center justify-end'>
-        <div className=''>
-          <Image alt={`${project_name}_media`} src={project_image} width={150} height={150} className={`${project_image !== '' ? '': 'hidden'}`} objectFit='contain'/>
-        </div>
-        
       </div>
     </a>
   )
