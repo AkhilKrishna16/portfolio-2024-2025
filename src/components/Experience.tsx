@@ -14,7 +14,7 @@ interface ExperienceProps {
   experience_link: string | undefined,
 }
 
-const Experience = ({job_title, company_name, start_date, end_date, experience_skills, experience_description, experience_image, experience_link}: ExperienceProps) => {
+const Experience = ({ job_title, company_name, start_date, end_date, experience_skills, experience_description, experience_image, experience_link }: ExperienceProps) => {
   const CardContent = () => (
     <div className='bg-tab-color border-none w-full h-[380px] flex flex-col overflow-hidden px-5 py-4 hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 rounded-lg cursor-pointer'>
       <div className='flex flex-row items-start justify-between mb-3'>
@@ -39,21 +39,21 @@ const Experience = ({job_title, company_name, start_date, end_date, experience_s
 
           <div className='flex flex-col gap-1.5'>
             {experience_skills.map((value, index) => {
-                return (
-                  <span key={index} className='text-[10px] tracking-[.2em] text-gray-300 bg-gray-800/60 px-2.5 py-1 rounded w-fit border border-gray-700/40'>
-                    {value.toUpperCase()}
-                  </span>
-                )
-              })}
+              return (
+                <span key={index} className='text-[10px] tracking-[.2em] text-gray-300 bg-gray-800/60 px-2.5 py-1 rounded w-fit border border-gray-700/40'>
+                  {value.toUpperCase()}
+                </span>
+              )
+            })}
           </div>
         </div>
 
         {experience_image && (
           <div className='right-side w-20 h-20 flex items-center justify-center flex-shrink-0'>
             <div className='relative w-full h-full'>
-              <Image 
-                alt={`${company_name}_media`} 
-                src={experience_image} 
+              <Image
+                alt={`${company_name}_media`}
+                src={experience_image}
                 fill
                 className='object-contain'
               />
