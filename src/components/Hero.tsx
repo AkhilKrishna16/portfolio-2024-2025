@@ -36,8 +36,8 @@ const Hero = () => {
               working on ways to improve my{" "}
               <span className="text-white text-[15px] underline hover:text-red-400 hover:font-semibold transition duration-300">
                 Mandelbrot Set Generator
-              </span>{" "}
-              <br /> and updating the component.
+              </span>
+              {"."}
               <br />
               <br />
               In my free time, I like playing poker, going to the gym, and
