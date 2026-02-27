@@ -85,7 +85,6 @@ export default function Home() {
           {experiences.map((exp) => (
             <a
               key={exp.company}
-              href={exp.link}
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-between items-baseline text-sm group"
@@ -98,9 +97,6 @@ export default function Home() {
                   {" "}
                   · {exp.role}
                 </span>
-              </span>
-              <span className="text-gray-400 dark:text-zinc-600 text-xs ml-6 shrink-0">
-                {exp.period}
               </span>
             </a>
           ))}
