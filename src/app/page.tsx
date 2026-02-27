@@ -22,12 +22,12 @@ const experiences = [
 
 const projects = [
   {
-    name: "GPU Mandelbrot Set Generator",
+    name: "gpu mandelbrot set generator",
     tech: "cuda, c, openmp",
     link: "https://www.linkedin.com/feed/update/urn:li:activity:7396971491789221888/",
   },
   {
-    name: "Longhorn Eats",
+    name: "longhorn eats",
     tech: "react native, gcp, python",
     link: "https://apps.apple.com/us/app/lh-eats/id6468611223/",
   },
