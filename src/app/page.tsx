@@ -62,7 +62,6 @@ export default function Home() {
           <h1 className="text-3xl font-semibold tracking-tight mb-1">
             akhil krishnamurthy
           </h1>
-          <p className="text-sm text-gray-400 dark:text-zinc-500">cs @ ut 🤘</p>
         </div>
         <button
           onClick={toggle}
