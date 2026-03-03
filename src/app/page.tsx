@@ -104,7 +104,7 @@ export default function Home() {
 
       <section className="mb-16">
         <h2 className="text-xs font-medium tracking-widest text-gray-400 dark:text-zinc-600 mb-5">
-          projects
+          builds
         </h2>
         <div className="flex flex-col gap-4">
           {projects.map((proj) => (
