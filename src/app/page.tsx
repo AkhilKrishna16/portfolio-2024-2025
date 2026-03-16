@@ -22,6 +22,11 @@ const experiences = [
 
 const projects = [
   {
+    name: "blnded v0 (beta)",
+    tech: "blip, clip, pinecone",
+    link: "https://blended-v1.vercel.app/",
+  },
+  {
     name: "gpu mandelbrot set generator",
     tech: "cuda, c, openmp",
     link: "https://www.linkedin.com/feed/update/urn:li:activity:7396971491789221888/",
