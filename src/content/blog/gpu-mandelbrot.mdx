@@ -40,7 +40,11 @@ the coloring is the fun part — a `(1-t)^n * t` polynomial for each channel cre
 
 - **stb_image_write** is great for quick image output in c without pulling in a massive library
 - cuda's `__device__` functions make it easy to break gpu code into clean helper functions
-- the block size (32×32 = 1024 threads) maxes out most nvidia gpus' threads-per-block limit, which is what you want for throughput
-- even with just 1000 max iterations, the visual detail you get is impressive
+- learning actually how a gpu is faster than a cpu was pretty cool — understanding that gpu's are better for same operation in parallel across threads is cool
+- understanding what `cuda_device_synchronize` does helped me make connections between regular c and cuda or cpu to gpu
+
+## what to improve
+
+- someone contacted me [on linkedin](https://www.linkedin.com/feed/update/urn:li:activity:7396971491789221888/) about using a custom meta library called **delresto** for optimized cpu performance — it's been a while since the og post, but it's something i want to work on and get back to contacting this researcher i shall leave unnamed
 
 the full source is [on github](https://github.com/AkhilKrishna16/mandelbrot-set-generation) if you want to poke around or run it yourself
