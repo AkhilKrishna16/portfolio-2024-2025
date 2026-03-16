@@ -1,0 +1,46 @@
+---
+title: "rendering the mandelbrot set on a gpu"
+date: "2025-11-21"
+description: "how cuda makes fractal generation ~5x faster than cpu threads"
+---
+
+![mandelbrot set rendered on gpu](/mandelbrot_set.png)
+
+i built a mandelbrot set renderer in cuda to see how much faster gpu parallelism is compared to cpu-based approaches like pthreads and openmp. the answer: a lot
+
+## the numbers
+
+| method         | time (seconds) |
+| -------------- | -------------- |
+| cuda (gpu)     | 0.125          |
+| openmp (cpu)   | 0.221          |
+| pthreads (cpu) | 0.643          |
+
+cuda comes in at **~1.8x faster than openmp** and **~5x faster than pthreads** — and this is on a relatively simple fractal. the gap only grows with more complex computations
+
+## why gpus are good at this
+
+the mandelbrot set is an embarrassingly parallel problem. every pixel is independent — you just iterate z = z² + c until it escapes or hits the max iteration count. no pixel depends on any other pixel
+
+cpus are great at complex, branching, sequential logic. but when you have 2 million pixels that all need the same computation? that's what gpus were designed for
+
+## how it works
+
+the kernel launches a 60×34 grid of 32×32 thread blocks — enough to cover every pixel in a 1920×1080 image. each thread:
+
+1. maps its `(x, y)` position to a point on the complex plane (real: [-2.0, 1.0], imaginary: [-0.85, 0.8375])
+2. iterates z = z² + c up to 1000 times
+3. bails out early if |z| > 2.0 (the point has escaped)
+4. uses logarithmic smoothing on the escape time to avoid banding artifacts
+5. maps the smoothed value to an rgb color using a polynomial gradient
+
+the coloring is the fun part — a `(1-t)^n * t` polynomial for each channel creates that smooth blue-to-gold-to-dark gradient you see in the image
+
+## what i learned
+
+- **stb_image_write** is great for quick image output in c without pulling in a massive library
+- cuda's `__device__` functions make it easy to break gpu code into clean helper functions
+- the block size (32×32 = 1024 threads) maxes out most nvidia gpus' threads-per-block limit, which is what you want for throughput
+- even with just 1000 max iterations, the visual detail you get is impressive
+
+the full source is [on github](https://github.com/AkhilKrishna16/mandelbrot-set-generation) if you want to poke around or run it yourself
