@@ -2,9 +2,14 @@ import { Analytics } from "@vercel/analytics/react";
 import { FaGithub, FaLinkedin, FaXTwitter, FaEnvelope } from "react-icons/fa6";
 import Link from "next/link";
 import ThemeToggle from "@/components/theme-toggle";
+import TextSwap from "@/components/text-swap";
 import { getAllPosts } from "@/lib/blog";
 
 const experiences = [
+  {
+    company: "incoming @  (summer 2026)",
+    role: "swe",
+  },
   {
     company: "codefour (yc x25)",
     role: "ai/ml",
@@ -14,7 +19,7 @@ const experiences = [
     role: "swe",
   },
   {
-    company: "university of north texas -- covis",
+    company: "university of north texas - covis",
     role: "cv research",
   },
 ];
@@ -23,7 +28,7 @@ const projects = [
   {
     name: "blnded v0 (beta)",
     tech: "blip, clip, pinecone",
-    link: "https://blended-v1.vercel.app/",
+    link: "https://nextblnded.com",
   },
   {
     name: "gpu mandelbrot set generator",
@@ -71,7 +76,15 @@ export default function Home() {
             >
               <span>
                 <span className="font-medium group-hover:underline underline-offset-2">
-                  {exp.company}
+                  {exp.company.includes("\uF8FF") ? (
+                    <>
+                      {exp.company.split("\uF8FF")[0]}
+                      <TextSwap defaultText={"\uF8FF"} hoverText="apple" />
+                      {exp.company.split("\uF8FF")[1]}
+                    </>
+                  ) : (
+                    <span className="underline-offset-2">{exp.company}</span>
+                  )}
                 </span>
                 <span className="text-gray-500 dark:text-zinc-500">
                   {" "}
