@@ -1,0 +1,79 @@
+---
+title: "fixing my low-level knowledge week 1"
+date: "2026-04-05"
+description: "starting from the complete basics -- a synopsis"
+---
+
+## my realization of mistakes
+
+i landed an internship at fidelity investments and made the tragic mistake of just giving up
+on the EXTREMELY CORE computer architecture class i was taking (cs 429.) i stopped caring,
+didn't feel like putting in the hard work anymore -- i just cared about material rewards, and
+didn't feel like there was any at that time. i literally just started playing chess to bore away the time.
+i ended up getting a **c+**.
+
+however, i changed my mindset for the better come the new semester when i started taking operating
+systems (cs 439.) i thought i would give it my all, i'm actually interested, so i essentially devoted my
+life to that class. i got a **b-**.
+
+how, after such a drastic change in how much of a s\*\*t i gave, did i only get a letter grade more? (squeaked by
+with a b- btw) i realized, i didn't understand anything on the exams while i was taking them in os because my fundamentals
+were **whack**, and i **couldn't comprehend** going to low-level systems, and i felt somewhat **content** just working on application software for my career.
+
+i've decided for a while to pivot off this **d\*\*k** mentality of mine.
+
+this last week, i've finally finished exams, finished a hard challenge of recruiting, and i'm deciding to actually
+pursue a true challenge of re-learning computer architecture and understanding the ins-and-outs of the class -- not just for a day or week,
+for a **very long time**.
+
+it goes into my career goals, and as someone who wants to understand and help reduce model footprints on memory and help increase performance
+when it comes to inference, i now realize the grave mistake i did last time i got an internship, and i'm not giving up on classes this time around,
+and i'm actually going to fill in my time playing something other than chess, and that is working on low-level systems, and truly understanding the fundamentals.
+
+so it might seem stupid for most when i'm documenting my journey on re-learning, because i might be documenting stuff like CPI and instructions and clock rate and other
+really simple stuff, but i have to document for myself and my admission that i genuinely don't know anything about the field i aspire to go into -- i shall fix that now.
+
+anyways here we go :)
+
+## the actual stuff i learned from the beginning
+
+this is from **P&H chapter 1**
+
+CPI - cycles per instruction
+clock rate - cycles per second (measured in hertz)
+time per cycle - 1 / clock rate (commonly measured in nanoseconds)
+instruction count - the number of instructions processed
+
+cpu execution time = # of instructions \* time per instruction
+
+volatile memory - memory that doesn't necessarily stay with so much guarantee; could potentially
+be lost
+
+non-volatile memory - memory that, once written, stays, unless directly removed
+
+compiler - converts high-level code (i.e. C) to actual assembly language
+assembler - converts assembly language to machine language (symbolic to binary)
+
+there are two main parts in a CPU: the datapath and the control. datapath is the actual brawn of the cpu,
+it punches the numbers and calculates the result. the control segments dictates which flow this data should take,
+and where it should go.
+
+a transistor is an on/off switch -- that simple. however, many transistors (like billions sometimes) are combined into a
+singular chip. a microprocessor, as a result, is a singular processor embedded onto one chip. sometimes, there can be multicore
+processors which contain multiple cores allowing for different amounts of processing.
+
+there are a lot of different measures of performance of a program, and one specific measure
+(or even two) cannot dictate whether one might be better than the other -- you must take the full
+scope of instructions, CPI, clock rate, timing, etc. into account.
+
+another common fallacy is relating to amdahl's law: just because you improve a component of the system doesn't mean that the entire system
+improves proportionally -- just the part that was actually using the component that you improved.
+
+## reflection
+
+it might've been simple, but i'm very (corny s\*\*t incoming) proud of myself for re-learning some of the stuff, and to keep going at it. i will constantly
+post every week on this stuff, and i should constantly get better. my internship this summer is primarily working on low-level systems and c++, so i'm excited
+to get a lot of exposure, put in hours as an intern, and hopefully supplement my own research and learning (well, re-learning) with some practical experience.
+
+i also didn't completely document everything i learned, i take notes on an ipad, and its kind of hard to write down everything with my notes to text, so starting from
+now-ons, i'll be writing directly in this blog, or at least a very high-level view of it.
