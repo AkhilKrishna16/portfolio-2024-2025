@@ -1,0 +1,258 @@
+---
+title: "fixing my low-level knowledge week 2"
+date: "2026-04-12"
+description: "reading up on the actual MIPS instruction set"
+---
+
+## intro
+
+this is my notes on chapter 2 of p&h software/hardware. im planning to build projects alongside just to learn further.
+
+## the stuff i learned
+
+specific operations in a high-level language like C, Java, etc. have a simplistic and readable way about converting from actual tokens to assembly.
+for instance, there is a natural number of operations for an add operation in C:
+
+```c
+int a = b + c;
+```
+
+this translates to
+
+```mips
+add a, b, c
+```
+
+as you can see, there is one operation in MIPS for one operation in C, and this structure can be applied to a majority of operations that
+are present. however, say you have something like
+
+```c
+int a = (g + e) - (d + f);
+```
+
+this might seem like just one operation in C, but this translates to multiple operations in MIPS that must happen before performing any "singular"
+operation like before.
+
+```mips
+add b, g, e
+add c, d, f
+sub a, b, c
+```
+
+in this case, three operations for the one.
+
+these operands are directly baked into the processors through **registers**, primitives used in hardware design. in other words, each MIPS instruction
+is restricted to the use of just registers as operands.
+
+the size of a register is commonly **32** bits or 4 bytes; groups of 32 bits are called words. there are 32 registers that operands can be. a lot of 32's.
+
+why not have more than 32? you don't want to restrict the clock cycle timing, as the electrical signal to go to a further register would be longer.
+the MIPS convention for utilizing a register in a MIPS instruction is use $ before two characters like 's0' or something.
+
+but if you only have 32 registers, how would you store large structures like arrays? you store them in memory, and then use **data transfer instructions**
+like ldr. essentially, you provide the actual memory address into the instruction (through a register), and that loads up the data from that memory
+address into a specified register -- this specific instruction is called a load.
+
+```mips
+lw $s0, 8($s3)
+```
+
+this means "the base address is in $s3 (**base register**) -- read that, add bytes (**offset**) to get the 8th value, and load that value from memory
+into $s0".
+
+each word in memory is separated by 4 bytes, since each word takes up 4 bytes. in MIPS, words must start at addresses that are multiples of 4. this
+requirement is called an **alignment restriction**. sometimes it will waste space by adding **padding** or filler bytes just to make sure a piece of data
+is aligned.
+
+so actually the above instruction should be
+
+```mips
+lw $s0, #32($s3)
+```
+
+to indicate 32 bytes from the base address. MIPS is **big-endian**, meaning that it stores the word address at the left-most byte. **little-endian**
+is the opposite.
+
+**store** is complementary to load, as it takes something from a register and stores it in memory -- sw.
+
+```mips
+sw $t0, #48($s3)
+```
+
+sometimes, there are more variables used than registers available. the concept of **spilling registers** is where you store lesser-used variables in
+memory.
+
+to use an immediate in an operation, we can use addi so we don't have to load the constant from memory.
+
+```mips
+addi $s0, $s0, 4
+```
+
+we represent data as accordance with electronic signals as binary. therefore, data is represented in 32-bit wide values where the **least-significant bit**
+is the rightmost bit and the **most-significant bit** is the leftmost bit. if we perform an operation with these bits that cannot be represented in the
+current width, we call it **overflow**.
+
+for positive and negative numbers, we use **twos-complement** to represent both. leading 1's means that you have a negative number and leading 0's means
+that you have a positive number. of course, to determine if something is negative or positive, you just need the **sign bit** which is the leftmost or
+most significant bit.
+
+to get the value of a twos-complement number, you can simply negate the number and then add 1.
+
+if you want to convert a 16-bit width to 32-bit width, all you need to do is **sign extension** -- fill the remaining bits with the bit of the MSB (most significant
+bit).
+
+you convert an instruction into instruction format by converting the instruction into different segments called **fields** that can be represented with binary. the structure
+of a MIPS instruction format is
+
+**[op: operation: 6 bits][rs: first register operand: 5 bits][rt: second register operand: 5 bits][rd: destination register: 5 bits][shamt: shift amount: 5 bits][func: specific operation variant: 6 bits]**
+
+all MIPS instructions are 32 bits long. **machine language** is the numeric versions of instructions and a sequence of such instructions
+is called **machine code**. however, since we don't want to be reading long strings of binary, we instead read hexadecimal by converting each
+length-4 group into its own hexadecimal value.
+
+however, sometimes we need more than whatever the field provides in bits. for instance, if we were using a lw instruction with 5 bits for the immediate value for offset,
+that means that are only allowed 2<sup>5</sup> = 32 values. therefore, we adapt: we use an r-type format for registers and an i-type format for immediate and data transfer
+instructions. the i-type format is
+
+**[op: operation: 6 bits][rs: first register operand: 5 bits][rt: second register operand: 5 bits][constant/address: offset: 16 bits]**
+
+that means that you can use 16 bits for the offset allowed to address any word within a region of 2<sup>15</sup> or 32768 bytes or 8192 words.
+
+this entire concept leads to the important reality of **stored-program concept** where you can load any executable/program because it can be stored in memory
+and easily retrieved from memory with instructions. however, by maintaining the idea of an instruction-to-number format, there is only a small number of ISAs
+in rotation in the industry, since there must be a commonality on how to process the binary, read, write, etc.
+
+for the shamt value, it applies to shift operations like sll and srl which perform shift operations by a certain amount of bits.
+
+```mips
+sll $t2, $s0, 4
+```
+
+would translate to the instruction format
+
+[op: 0][rs: 0 (unused)][rt: 16][rd: 10][shamt: 4][funct: 0]
+
+shifting left by k bits gives the same result as multiplying the number by 2<sup>k</sup>. shifting right by k bits gives dividing the number
+by 2<sup>k</sup>.
+
+you can apply logical operators like AND, OR, NOT (one operand), NOR, etc. you can apply an operation with AND with some bit pattern to "conceal" some bits --
+the bit pattern in this case is called the bit mask.
+
+**conditional branches** represents decision making like beq, bne, etc.
+
+for instance,
+
+```mips
+beq register1, register2, L1
+```
+
+means that goto segment L1 if the value in register1 = register2. similarly, you have bne for the values not equal to each other. a j command means a jump
+meaning that if you finish with a segment, you can jump to a specific branch or code segment.
+
+a **procedure** is a reusable segment of code -- a task. parameters act as an interface between the procedure and the rest of the program, as they can pass values and return results
+from the procedure. essentially, you "send" the parameters to this procedure, execute, and then return back to the point of origin. the parameters that you pass in, the values that are
+returned, and the return address need to be quickly accessed by this procedure (you don't want to stall on this procedure call) so you store them in dedicated registers.
+
+in addition to allocating these registers, MIPS asm provides an address and simultaneously saves the current address of the following instruction into a register **$ra**. the **jump-and-link (jal)**
+
+```mips
+jal ProcedureAddress
+```
+
+allows you to do this, by saving the current address into $ra. this "link" is called the **return address**, which is needed since the same procedure can be called from anywhere. then the procedure
+would use the address stored in $ra by the caller to unconditionally go back to the return address using something like
+
+```mips
+jr $ra
+```
+
+this return address register $ra is commonly called the **program counter, PC,** and jal stores PC + 4 in $ra to link the following instruction to set up the procedure return.
+
+now regarding all these values, after the procedure is done, we need to retrieve those old values that were stored before the procedure was called. this is an example of spilling registers
+where we need to store those values in memory for some time. the ideal data structure for this is a **stack**. a stack needs a pointer to the most recently allocated address in the stack to show
+where new spilled registers should be placed or where old register values are found. the **stack pointer** is adjusted by one word for each register that is saved or restored, reserved in register 29
+called **$sp**. stacks grow from higher addresses to lower addresses -- when you add values, you subtract. otherwise, add bytes.
+
+```c
+int leaf_example(int g, int i, int j, int k) {
+    int f;
+
+    f = (g + h) – (i + j);
+    return f;
+}
+```
+
+```mips
+leaf_example:
+
+    addi $sp, $sp, -12 # create space for new variables
+    sw $t1, 8($sp)
+    sw $t0, 4($sp)
+    sw $s0, 0($sp) # this is the current top of the stack, sp is lower than sp + 4
+
+    add $t0, $a0, $a1
+    add $t1, $a2, $a3
+    sub $s0, $t0, $t1
+
+    add $v0, $s0, $zero # move to return value register
+
+    lw $s0, 0($sp) # pop off the stack at the most recent sp
+    lw $t0, 4($sp)
+    lw $t1, 8($sp)
+    addi $sp, $sp, 12 # clear up extra space
+
+    jr $ra
+```
+
+however, MIPS designates the difference between $t and $s registers by saying that $t registers **should NOT** be preserved by the procedure
+and $s registers **should** be. this way, there is some simplicity as to what should be assumed as saved and what should not.
+
+procedures that don't call others are called **leaf procedures**. however, **nested procedures** must also save the return addresses for each of
+the procedures before the current procedures, as well other variables that may be present. in other words, push registers onto the stack, and then
+they are retrieved from the current sp, and of course, sp is shifted to a higher address.
+
+```c
+int fact(int n) {
+    if (n < 1) {
+        return 1;
+    } else {
+        return (n * fact(n - 1));
+    }
+}
+```
+
+```mips
+fact:
+    addi $sp, $sp, -8 # you create space for the two variables (n and return address)
+    sw $ra, 4($sp)
+    sw $a0, 0($sp)
+
+    slti $t0, $a0, 1 # check the base case
+    beq $t0, $zero, L1 # recursion if false
+
+    addi $v0, $zero, 1 # return 1 if fall-through
+    addi $sp, $sp, 8 # clear space on stack for variables
+    jr $ra # propagate up recursion tree
+
+L1:
+    addi $a0, $a0, -1 # update n
+    jal fact # make the recursive call
+    # (here for jr)
+    lw $a0, 0($sp) # load back the variables from the previous call
+    lw $ra, 4($sp)
+    addi $sp, $sp, 8 # clear up space on stack
+
+    mul $v0, $a0, $v0 # update the return value
+    jr $ra # jump back to `jal`
+```
+
+the **$gp** register is for the global address, use to refer to static variables that exist through a procedure, and don't get discarded at completion. we use $gp to simplify use of allocating
+static variables that need to be used in a procedure.
+
+## project
+
+really simple stuff, but i created a calculator on a mars simulator for all main operations with integer division. although i did learn
+that you can just use the floating point registers ($f0, $f1, etc.) to store the actual floating point values and then perform operations
+on them. something really simple, but i learned something new and it worked!
+
+i also think i wrote a lot already for this week, so i'm gonna write the rest of my notes on week 3's log. stay in tune for more!

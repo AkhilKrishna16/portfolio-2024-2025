@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
 import Link from "next/link";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import ThemeToggle from "@/components/theme-toggle";
+import { CodeBlock } from "@/components/code-block";
 
 export function generateStaticParams() {
   const posts = getAllPosts();
@@ -49,7 +51,24 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
       </p>
 
       <article className="prose prose-sm prose-gray dark:prose-invert">
-        <MDXRemote source={post.content} options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }} />
+        <MDXRemote
+          source={post.content}
+          options={{
+            mdxOptions: {
+              remarkPlugins: [remarkGfm],
+              rehypePlugins: [
+                [
+                  rehypePrettyCode,
+                  {
+                    theme: "github-dark",
+                    keepBackground: false,
+                  },
+                ],
+              ],
+            },
+          }}
+          components={{ pre: CodeBlock }}
+        />
       </article>
     </main>
   );
