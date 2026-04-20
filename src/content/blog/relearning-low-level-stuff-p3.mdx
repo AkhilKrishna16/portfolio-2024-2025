@@ -1,0 +1,238 @@
+---
+title: "fixing my low-level knowledge week 3"
+date: "2026-04-18"
+description: "continuing on chapter 2"
+---
+
+# intro
+
+i'm directly continuing from my last blog on some of chapter 2.
+
+# continuing on chapter 2
+
+say you have a stack pointer, and in the middle of a procedure, you start modifying the stack pointer again. so the initial variables and stuff that you allocated was selected at some offset
+and you don't know how to get those values anymore, because the initial offset has changed -- you need some kind of anchor point to start it off.
+
+therefore, we reserve a register to start off a procedure's variables called an $fp or frame pointer. this indicates the start of where a specific procedure's variables are stored. the entire
+segment whose start is marked by the frame pointer is called a **frame**.
+
+there are some other things that need to be allocated for the user in this case on top of stored variables and stuff. the complete picture:
+
+- first part is reserved
+- following is the text segment that contains machine code
+- following is the static data that is pointed to by $gp, containing static variables that persist throughout the lifetime of the program
+- following is the heap that grows normally from lower addresses to higher addresses, and the stack growing from higher addresses to lower addresses;
+  the stack and the heap grow together
+
+the **heap** is used to dynamically allocate data structures and objects that grow and shrink constantly within their lifetime.
+in c, you can allocate space on the heap using **malloc** and free up allocated space using **free**. forgetting the free space leads to a memory crash
+since you can take up so much memory with a `malloc`.
+
+if there are more than 4 parameters within a procedure, then you can use $a0-$a4 as normal then allocate everything else in the stack.
+
+MIPS also provides instructions to move bytes within words from and to memory like
+
+```mips
+lb $t0, 0($sp) # read byte for source
+sb $t0, 0($gp) # write byte to destination
+```
+
+sign extensions works the same way whenever you load in a byte into a register by just extending the sign bit of the original byte.
+
+to represent a string, there are three different main representations:
+
+- first position is reserved to give the length of the string
+- an accompanying variable has the length of the string
+- the last position indicates the end of the string like some eof character.
+
+in C, the third option is utilized where a \0 character is utilized so a string "Cal" would actually be stored as 4 bytes.
+
+`strcpy` which copies string y to string x utilized the null character to find the end of a string.
+
+```c
+void strcpy (char x[], char y[])
+{
+    int i;
+    i = 0;
+    while ((x[i] = y[i]) != ‘\0’) /* copy & test byte */
+      i += 1;
+}
+```
+
+converts to
+
+```mips
+# assuming base addresses for x and y are in $a0 and $a1, i in $s0
+strcpy:
+    add $sp, $sp, -4
+    sw $s0, 0($sp)
+
+    add $s0, $zero, $zero # initialize $s0
+
+L1:
+    # get the address of y[i]
+    add $t0, $a1, $s0
+    # get the value at this address
+    lbu $t1, $(t0)
+    # get the address of x[i]
+    add $t2, $a0, $s0 # there is no `sbu` -- mips just writes the raw bits
+    sb $t1, 0($t2)
+    # check if null character
+
+    beq $t1, $zero, L2
+
+    addi $s0, $s0, 1
+    j L1
+
+L2:
+    # erase space
+    lw $s0, 0($sp)
+    add $sp, $sp, -4
+    jr $ra
+```
+
+note: the compiler will also use temporary registers not as just registers for saving temporary values, but values that might be used in a leaf procedure like strcpy.
+
+mips instructions have **halfword** instructions (16 bits); things like lh loads 16 bits from memory and stores in the rightmost 16 bits of a register. sh works the same way as sb
+except for 16 bits instead of 8. java uses halfwords to store **each character**, since it represents each character as a unicode letter. additionally, however, java, for each string, adds
+metadata like length, so C strings takes up **less than half** the memory of java strings. however, this allows java to produce **faster** operations on strings, since metadata provides specific values
+like length upfront.
+
+how do we load a 32-bit immediate? currently, the max our instruction allows for immediate-type (I-type instructions) is 16 bits for the offset. mips provides lui and ori to load the
+upper-half of the 32-bit string and the lower-half of the 32-bit string.
+
+for instance, if we wanted to load 0000 0000 0011 1101 0000 1001 0000 0000 into a 32-bit sized register.
+
+```mips
+lui $s0, 61 # $s0 would have 0000 0000 0011 1101 0000 0000 0000 0000
+ori $s0, $s0, 2304 # now it would have 0000 0000 0011 1101 0000 1001 0000 0000
+```
+
+however, in mips, this "splitting" action is done by the **assembler** -- the $at register holds the intermediate value and is reserved by the assembler to utilize for this step. so therefore,
+you can use li to load a 32-bit immediate even though that it is a **pseudo-instruction** and the actual behind-the-scenes instruction is splitting the instruction into two: lui and ori.
+
+the final instruction is a j-type instruction which uses 6 bits for the opcode and 26 bits for the actual address of the program. however, for something like
+
+```mips
+bne $s0, $s1, L1
+```
+
+which follows a I-type instruction which allows for a 16-bit immediate for addressing, it essentially means that you can only access program that max 2<sup>16</sup> bytes away, which is pretty
+small and infeasible. an alternative to this is to specify a register that would be **added** to the branch address, so that a branch instruction would always calculate **PC = Register + Branch Address**.
+essentially, pick a point in space, calculate an offset which would be ±2<sup>15</sup> bytes away, meaning you can technically access any point in memory.
+
+this form of addressing is called **PC-relative addressing**. a majority of loops and if statements utilize program target addresses that are within 16 bytes. therefore, utilizing PC-addressing in this case
+is resourceful since everything will be possibly addressed. therefore, the register that should be used in the formula is PC + 4. however, jump and jump-and-link instructions casually use the J-type instruction
+as the 26-bit immediate is necessary to be used as the program has no reasoning to be close to PC. additionally, for PC-relative addressing, you count in terms of words, not bytes. so an increase of 1 in the address
+is an increase of 4 bytes, not just 1.
+
+the same for j-type instructions except you would use the last 26 bits to form a 32 bit address by add the top 4 bits of the PC to the left side of the address and a 00 to the end
+to form 32 bits -- this means that we assume that the target address must be within the same 256 MB region as the current PC.
+
+so what happens when a conditional branch's target address is farther than what can be represented by 16 bits. then, the assembler comes to the rescue and inserts an unconditional jump to the target, and inverts
+the condition so that the branch decides whether to skip the jump or not. like
+
+```mips
+beq $s0, $s1, L1
+```
+
+would be replaced with
+
+```mips
+bne $s0, $s1, L1
+j L2
+L2: ...
+```
+
+internally.
+
+**addressing modes** or multiple forms of addressing specify the different operands used, the format, etc.
+
+- immediate addressing -- the operand is a constant within the instruction itself
+- register addressing -- the operand is a register
+- base addressing -- the operand is at the memory location whose address is the sum of a register and a constant
+- pc-relative addressing -- the operand is at the memory location whose address is the sum of the address in pc and a constant
+- psuedodirect addressing -- where the jump addressing is the 26 bits of the instruction concatenated with the upper bits of PC
+
+parallel execution is easier when tasks are independent, but they often need to cooperate with one another. for instance, one thread might write to some data, and another writes to the same data or word.
+in this case, this could lead to a **race condition** where the outcome is unpredictable since you cannot determine which thread runs first.
+
+a singular atomic memory operation is difficult, since it requires a memory read and write in a single, uninterruptible instruction -- **how would you put two instructions in one?**
+an alternative is to have a pair of instructions executed as if the pair were atomic by having the second instruction return a value showing whether the pair of instructions was executed as if the pair
+was atomic. if all instructions seem to have been executed before or after the pair, then the pair is **effectively atomic.** thus, whenever the pair seems to be atomic, no other processor can change the value
+between the instruction pair.
+
+this pair is created through **ll -- load linked -- and sc -- store conditional**. essentially, these two instructions are used in sequence. if the contents specific by the load linked are changed
+before the store conditional to the same address occurs, then the store conditional fails. the store conditional is defined to store the value of a register in memory **AND** to change the value of that register
+to a 1 if successful else 0.
+
+in action,
+
+```mips
+try:
+    add $t0, $zero, $s4 # copy exchange value
+    ll $t1, 0($s1) # load linked
+    sc $t0, 0($s1) # try store in $s1 address
+    beq $t0, $zero, try # if the value returned was 0 (failure), re-try
+    add $s4, $zero, $t1 # add the value
+```
+
+ll essentially puts a flag on that memory address, $s1 + 0. then, by the time sc comes along, it checks this flag and makes sure nothing was modified to the contents of this address.
+if it was, then you return 0. otherwise, then you can put the old value into $s4.
+
+the compiler transforms the C program into an assembly language program -- a high-level language normally requires less code than assembly.
+
+a **psuedoinstruction** is an instruction that may not be specified in the ISA, but is still accepted since the assembler can treat it as an instruction. for instance,
+move is not specified but still accepted because the assembler treats it as
+
+```mips
+add $t0, $zero, $t1
+```
+
+for instance.
+
+the assembler turns the assembly language program into machine code, but more specifically, first into an **object file**, a combination of machine language instructions, data, and information.
+to produce the binary version of each instruction, the assembler uses a **symbol table** which keeps track of labels used in branches and data transfer instructions to its
+binary version.
+
+more simply, a symbol table keeps track of which symbols (a function name, a variable name, etc.) have been defined or haven't been defined. symbols are defined if they are defined within the current
+file which means the location would be .text + offset. however, an undefined symbol would need to be later found by the linker in a separate file and is currently marked as undefined, so you find the address
+with respect to the file it is located in like .text + offset and replace the original "placeholder" with this value.
+when you link multiple object files, you
+
+1. collect all symbols
+2. match names like add() is an address in file a
+3. patch references where the symbol table left undefined
+
+you get an error whenever you cannot resolve an undefined reference, or you have multiple references to the same name, or many other errors.
+
+within the object file, you have the
+
+- object file header - describes size and position of other things in the file
+- text segment - machine language code
+- static data segment - data allocated for life of program (.data for initialized global variables, .bss for uninitialized global variables)
+- relocation information - identify instructions which utilize operands/variables that aren't defined in the current file and where the address is unknown and put a "placeholder" to be fixed later
+- symbol table - contains rest of references, ones that aren't defined like external references (i.e. extern)
+- debugging information - how the modules were compiled so a debugger can connect machine instructions and their addresses with C source files locations
+
+so whenever a change happens to a particular file, you **don't have to recompile** the entire file library or directory of c files, or even in that case, the entire c standard library. you would just need to
+recompile the .o file that contains the symbol table, text segment, etc. and the linker would just merge that with the other .o files that didn't change at all.
+
+the steps for linker are:
+
+1. place code and data modules symbolically in memory
+2. determine addresses of data and instruction labels
+3. patch both internal and external references
+
+once all external references are resolved, the linker determines the actual memory locations each module will occupy. when the linker places a module in memory, all absolute references must be recalculated based
+on the new memory locations since each module is now at a different location. then you would produce the **executable file** that can actually be run, but it has the same format as an object file, just without undefined
+references.
+
+# what i'm aspiring to do
+
+i want to learn a lot of the general concepts; i feel like i'm a limbo here -- i want to have enough time to make sure that i'm working on learning things the right way, but i realize that i also need to build and can't do
+things sequentially. so i'm going to do a lot of balancing: i might not fully deep-dive on a lot of chapter 2, but deep dive on important concepts like caching and stuff like that -- my aim to is to be well-rounded with a slight
+emphasis on gpu and i'm mostly doing this to understand the fundamentals pretty well. this does not mean i find it too hard or anything like that, i just need to make sure that i'm not dialing in on just one thing, and i don't think i
+can realistically give 100% to everything so i'm splitting some stuff.
+
+also, this chapter is way longer than i expected.
