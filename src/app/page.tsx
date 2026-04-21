@@ -60,7 +60,7 @@ export default function Home() {
 
       <p className="text-sm leading-relaxed text-gray-600 dark:text-zinc-400 mb-16">
         love gpus and math, trying to improvise daily, constantly searching up
-        s**t. still afraid of posting on x :(
+        stuff. still afraid of posting on x :(
       </p>
 
       <section className="mb-12">

@@ -1,0 +1,26 @@
+---
+title: "fixing my low-level knowledge week 4"
+date: "2026-04-25"
+description: "continuing on chapter 2"
+---
+
+# intro
+
+i'm aiming to finish up on chapter 2 and what is being covered. this doesn't have many notes, because i'm working on the other project with nvidia and profiling my own kernel.
+
+# what's left (a high-level overview)
+
+so the executable file is essentially just an object file with no leftover "undefined" references, everything has been resolved by the linker. now, to place the actual program within memory
+comes the **loader**, a systems program that places this object file within physical memory to actually be utilized. it creates space for text and data, and then allocates everything, clears
+registers to be used, and allocates the stack pointer.
+
+dynamically linked libraries (dlls) are compiled codes that your program **at runtime** rather than being baked directly into your executable at compile time. when you are calling something like
+`printf` you can either **statically link** which means that you copy all external code into the binary at compile time or you can **dynamically link** which means that you store just the reference
+to the binary and then load it at runtime and wire everything up.
+
+**JIT (just-in-time) compilers** are typically used to preserve portability and improve execution speed while the program was running. it translates interpreted code segments into native code of the computer
+while running, which is saved to save time in the next run of compilation.
+
+when you declare a pointer variable, say float\* A -- this would allocate 8 bytes for the pointer which contains the address to the data, not the data itself. the data lives somewhere else, commonly on the heap, but
+wherever you pointed the pointer to. when you declare a float A[1024] instead, you are actually allocating 1024 contiguous 8-byte blocks to be used for floats -- the name A is just the reference as a fixed address, but
+the memory for the data itself is right there.
