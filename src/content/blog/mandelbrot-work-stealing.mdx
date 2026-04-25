@@ -1,0 +1,77 @@
+---
+title: "a meta researcher, work-stealing, and a 2.5x speedup"
+date: "2026-04-24"
+description: "how a linkedin comment led me to rewrite my mandelbrot generator with dispenso"
+---
+
+![mandelbrot set rendered with dispenso](/mandelbrot_set.png)
+
+a while back i posted about my [mandelbrot set renderer](/blog/gpu-mandelbrot) — the cpu version used pthreads with static row partitioning across 8 threads, clocking in at ~0.62s. it worked. but it had a problem i hadn't fully appreciated yet
+
+## a comment from meta
+
+after i posted the project on linkedin, a researcher at meta left a comment suggesting i check out a library called [dispenso](https://github.com/facebookincubator/dispenso) — an open-source concurrency toolkit from facebook incubator. i didn't look into it right away, but the comment stuck with me. when i finally circled back and read through dispenso's docs, i realized it solved exactly the bottleneck my pthreads implementation had: **load imbalance**
+
+## the problem with static partitioning
+
+the mandelbrot set has wildly non-uniform workload. rows near the edges of the image are cheap — most pixels escape quickly and bail out after a few iterations. but rows through the center of the set? those pixels hit the max iteration count (100) before returning. they're orders of magnitude more expensive
+
+with pthreads, i was splitting the 1080 rows evenly across 8 threads — each thread gets ~135 rows. the thread that gets assigned the dense center rows becomes the bottleneck while every other thread sits idle waiting for it to finish. this is the classic problem with static work distribution on non-uniform workloads
+
+## enter dispenso
+
+dispenso gave me exactly what i needed: a `parallel_for` with dynamic work-stealing. the rewrite was honestly pretty clean — here's the core of it:
+
+```cpp
+dispenso::parallel_for(
+    dispenso::makeChunkedRange(0, IMG_H, dispenso::ParForChunking::kAuto),
+    [&](int yBegin, int yEnd) {
+        for (int y = yBegin; y < yEnd; y++)
+        {
+            for (int x = 0; x < IMG_W; x++)
+            {
+                double real = REAL_MIN + x * INC_REAL;
+                double imag = IMAG_MIN + y * INC_IMAG;
+
+                C c = {real, imag};
+                int itrs = mandelbrot(&c);
+
+                int idx = (y * IMG_W + x) * CHANNELS;
+                unsigned char r, g, b;
+                getColor(itrs, &r, &g, &b);
+
+                host_image[idx + 0] = r;
+                host_image[idx + 1] = g;
+                host_image[idx + 2] = b;
+            }
+        }
+    }
+);
+```
+
+## what parallel_for actually does
+
+`dispenso::parallel_for` takes a range and a lambda, splits the range into chunks, and distributes those chunks across a thread pool. the key difference from something like openmp's `#pragma omp parallel for` with static scheduling is that dispenso uses work-stealing under the hood. when a thread finishes its chunk, it doesn't go idle — it looks at other threads' queues and steals pending work from them. this means threads computing cheap edge rows will automatically pick up extra work, while the thread grinding through expensive center rows keeps working uninterrupted. no manual tuning, no guessing at chunk sizes
+
+## kAuto
+
+`dispenso::ParForChunking::kAuto` tells dispenso to automatically determine the chunk size based on the range size and number of available threads. instead of me hardcoding "split into 8 chunks" or "use chunks of 64 rows," dispenso picks a granularity that balances low overhead (fewer chunks = less scheduling cost) with good load balancing (more chunks = more opportunities to steal). it just works
+
+## the numbers
+
+| implementation                                  | time   |
+| ----------------------------------------------- | ------ |
+| pthreads (8 threads, static row partitioning)   | ~0.62s |
+| dispenso `parallel_for` (dynamic work-stealing) | ~0.25s |
+
+**~2.5x speedup** — and this is pure scheduling improvement. the actual per-pixel computation is identical. the only thing that changed is _how work gets distributed across threads_. no algorithmic optimization, no simd, no gpu. just smarter load balancing
+
+for context, this also brings the cpu version close to what openmp was giving me (~0.22s) — but with cleaner code and without needing compiler-specific pragmas
+
+## what's next
+
+the next step is replacing the row-based work distribution with **SIMD tiling**. right now dispenso chunks by lines — thread A gets rows 0-50, thread B gets rows 51-100, etc. but simd works best on contiguous rectangular tiles where you can process multiple pixels simultaneously with vector instructions. the plan is to tile the image into small blocks and dispatch those through dispenso's work-stealing scheduler, combining data-level parallelism (simd within a tile) with task-level parallelism (work-stealing across tiles)
+
+that should be another solid jump in performance. stay tuned
+
+the full source is [on github](https://github.com/AkhilKrishna16/mandelbrot-set-generation-cpu) if you want to check it out
