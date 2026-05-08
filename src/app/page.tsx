@@ -157,7 +157,7 @@ export default function Home() {
         </section>
       )}
 
-      <div className="flex gap-5 text-gray-400 dark:text-zinc-600">
+      <div className="flex justify-center gap-5 text-gray-400 dark:text-zinc-600">
         <a
           href="https://github.com/AkhilKrishna16"
           target="_blank"
