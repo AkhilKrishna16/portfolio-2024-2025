@@ -26,6 +26,11 @@ const experiences = [
 
 const projects = [
   {
+    name: "mirage",
+    tech: "python, model, mlops",
+    link: "https://mirage.akhilkrishnamurthy.com",
+  },
+  {
     name: "blnded v0 (beta)",
     tech: "blip, clip, pinecone",
     link: "https://nextblnded.com",
