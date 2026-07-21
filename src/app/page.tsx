@@ -7,7 +7,7 @@ import { getAllPosts } from "@/lib/blog";
 
 const experiences = [
   {
-    company: "apple ",
+    company: "",
     role: "swe",
   },
   {
