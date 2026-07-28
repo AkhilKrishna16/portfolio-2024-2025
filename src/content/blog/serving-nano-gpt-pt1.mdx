@@ -1,0 +1,165 @@
+---
+title: "part 1 of learning how to serve nano-gpt"
+date: "2026-07-26"
+description: "learning how to build a pre-train pipeline a decoder-only network"
+---
+
+## **intro**
+
+i've been very interested in llms for a while. but it's ironic that i have been vibe-coding everything, so i decided to build a simplistic decoder-only
+network from scratch. i take you through a full-on classic building of karpathy's nano-gpt for pre-training which creates the "document extender" that is
+coined by karpathy.
+
+eventually, i wish to focus on serving strategies for inference, and trying to make "nano-gpt" a servable model like kv-caching or speculative decoding or
+rotary positional embeddings or ...
+
+anyways, this is my detail into building llms.
+
+## **numerical embeddings**
+
+with this nano-gpt implementation, we operate on a **character-level** meaning that token identification in this case pertains to tokens being individual characters
+like "a", "b", ":", " ", etc.
+
+we can simply find the number of unique of characters within the input corpus (input.txt which is just a sample of 1m tokens from a shakespeare text) which is just
+**65** in this case. therefore, we can convert individual characters within the text to actually perform true mathematical operations on these tokens. so we implement an
+`encode` and `decode` function (you can probably guess what these do).
+
+## **batch processing**
+
+now, i'm presuming that some preliminary knowledge is present with the reader before they come across this. for instance, we know of the train-test split with ~90% of corpus
+data being allocated for training while the rest is for test. we use that here, but we also wish to process batches.
+
+when using PyTorch, we can **process batches in parallel** where each batch has some T timesteps (we later use 8 -> 256) and all we have to do is pass some (B,T,C) structured data
+into the model directly, and PyTorch can automatically identify the batch dimension all at once, and start processing in parallel like i've mentioned before. the reason why this
+is important is more evident that just parallel processing leading to faster training times.
+
+when updating gradients (which i'm also assuming the reader has heard about,) we can do a "traditional" way, we can pass in individual sequences one at a time, and that would be fine.
+however, each batch individually and the output can result in very different vector outputs in terms of magnitude and direction. therefore, batch processing in this case can allow for
+**averaged gradients.** now, this might not seem useful when it comes to some toy number like 4, but when increasing to larger quantities like 256, then with many different output vectors and
+**pointing gradients** then it helps.
+
+in this case, batches are produced in a shape of `BATCH_SIZE` with `xb` for the input being of shape `(BATCH_SIZE, TIMESTEPS, CHANNELS (C=65 characters, but will later be change))` starting
+at some random index `i` and spanning `BLOCK_SIZE` characters, and with `yb` for the target vector being one character ahead of `xb`.
+
+## **embedding of token vectors**
+
+as we have stated, each token can be represented out of possible 65 characters. now, we need embeddings for these tokens so 'a' must translate to some embedding vector of learned values. **why?**
+great question as always. we _COULD_ theoretically pass in the "one-hot" encoded vector or just the token index, but that is bad representation. we don't get much value out of the 0's and the vector
+becomes too "sparse" to actual be of meaningful value.
+
+therefore, we can embed this token with learned weights and convert it to something that the network can use. to have this "lookup" where we can find the embedding for any token in 65-length token set,
+we can use the `nn.Embedding` module from PyTorch with "dimensions" 65 by `N_EMBD` (or embedding size). this essentially is a lookup table such that it takes a token (in encoded form) and grabs the
+encoding vector for that token for you. internally, i have learned, `nn.Embedding` essentially converts the token index you pass (for instance, 42) and converts to a one-hot encoded vector, then actually
+grabs the embedding vector in the table -- don't worry, we aren't _cheating_ PyTorch with dimensions.
+
+## **importance of positional embeddings**
+
+now, this is all in writing, so i don't blame you if this question wasn't obvious to you: what happens if we flip around the tokens? if, for instance, in a batch with tokens [42, 43, 44] for instance, what if we
+flip it to [43, 42, 44] -- how would that affect training? currently, it doesn't do anything, which is really bad. this means that "the cat in the hat" means the exact same thing as "the hat in the cat" or "hat in the cat the"
+which is horrible.
+
+what is the important realization? position matters. if token 42 is in position 0 in the current batch, that is completely different if token 42 was in position 2 in the current batch -- context matters! therefore, we need some
+influence from position on the embedding of the token. as a derivative from the previous statement, we can say that the **embedding** for the token 42, for instance, in position 0 should be slightly different (if not completely)
+from token 42 in position 2. therefore, we introduced a positional embedding table as well. for every position in the current batch (say 256), we can assign another learning embedding vector of the same dimension as the token embedding
+vectors (`N_EMBD`) so we can just **add** them and get a new vector that theoretically takes into account both the token itself and the position it is in.
+
+like this: `self.positional_embedding = nn.Embedding(BLOCK_SIZE, N_EMBD)`. then, similar to the token embedding from before, we can just pass in the current position in the batch rather than the token index, and call it a day.
+
+## **SELF-ATTENTION!**
+
+sorry, i lied -- we aren't calling it a day. in fact, we are ramping up. the question of the matter is **communication**: how do make it so that tokens have context of the current sentence and know what is going on? for instance, should "bank"
+in "he robbed a bank" be the same as "the river bank fell apart"? no -- two different meanings of "bank". how do we know this? context and the other words. we are in the context of a "robbing" a bank in the first sentence, so it must be a financial
+bank, whereas the second sentence is talking about bank in the context of a "river". so how do we allow tokens communicate the same way it does to us? **SELF-ATTENTION!** self-attention is the crux of the LLM, and it allows tokens to effectively
+elaborate what they need, and for other tokens to offer information.
+
+let's start with two parts: `Q` and `K`. `Q` is the vector that embeds the answer for the current token to the question "what am i looking for?" - it is the **query** vector. several vectors will respond to this question, offering an answer to "what
+do i contain?" -- these are the **key** vectors. the point is that the current token is looking for tokens that offer the **most relevant information** to the query. for instance, let's take "he robbed a bank" for the token "bank". in this case, "bank"
+looks for context -- it wants the token that best correlates with what "bank" is looking for, and _voila_: "robbing" has some pretty good correlation. how do get that?
+
+a quick note: both Q and K turn a `N-EMBD`-length vector and turn it into an `HEAD` size (which is 384 in this case) since we want a rich representation and a large vector space to perform operations on and really capture each "nitty gritty" detail.
+
+we can matrix multiply the vectors `Q` and `K` -- **QK<sup>T</sup>**. this essentially finds the best correlation between each `Q` vector for every token -- every token looks for the token that provides the best context -- and the information for each token which is encoded
+by their key vectors `K` (we transpose `K` so matrix multiplication can actually work.) therefore, we get a matrix of a `(B,T,HEAD)` x `(B,HEAD,T)` = `(B,T,T)`, which represents the **affinity** between each token -- affinity means the "correlation" or the importance of token `i`
+to the context of understanding token `j`.
+
+finally, right now, you might be wondering what is inside in the matrix, and neither do i -- let's convert it to more representable using `softmax` across columns. `softmax` converts a vector into "probabilities" or values that when summed up equal 1. we apply a `softmax` operation across
+the columns to make it so that for a particular **query**, we find the "percentage" of importance for each token `j` to the context of the current token `i`.
+
+this turns the matrix into something that looks like
+
+```python
+[1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
+[0.4223, 0.5777, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
+[0.3571, 0.3264, 0.3165, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
+[0.2469, 0.2502, 0.2562, 0.2467, 0.0000, 0.0000, 0.0000, 0.0000]
+[0.2145, 0.1810, 0.1747, 0.2336, 0.1962, 0.0000, 0.0000, 0.0000]
+[0.1778, 0.1600, 0.1547, 0.1869, 0.1662, 0.1544, 0.0000, 0.0000]
+[0.1350, 0.1495, 0.1558, 0.1290, 0.1453, 0.1561, 0.1294, 0.0000]
+[0.1164, 0.1360, 0.1419, 0.1079, 0.1275, 0.1421, 0.1088, 0.1195]
+```
+
+for each batch (differs across batches of course.) as you can see, it adds up to 1 across rows. however, some rows have zeroes in certain places and the number of zeroes decrease by 1 as the row index increases.
+**why is this?** it corresponds to a main principle of a decoder-only architecture: **causal attention**. when we are predicting the next token, we only want to look at the context of _previous tokens_, not future tokens
+(bi-directional attention is both, which is encoder-only networks.) to draw an analogy, when we are speaking, we don't know what will be said in the future, we know what has currently been said. in the same way, it is
+"cheating" or data leakage which is a cleaner way of saying it if the transformer looks at future tokens ... to predict future tokens -- yeah, doesn't make sense. therefore, in the matrix above, we zero out tokens that
+are ahead of the current tokens, so they don't contribute to the context of the current token.
+
+(**hint:** whenever you see this kind of matrix for the result of QK<sup>T</sup>, it means that it is a causal attention usage, which means it is a decoder-only network.)
+
+finally, one last step. we want to actually apply this importance to the tokens to get a **weighted sum** of tokens for the context of the current token, including the current token. so you might be thinking "multiply this
+matrix by the key vectors so you get the importance of each key by the actual content of the key" -- you actually could do this, technically nothing wrong. however, researchers have found, and it has become commonplace, to have
+learned vector `V` representing **value** -- it represents the actual content that is **emitted** by the key vector you choose. as an analogy, the **key vector** could represent "eiffel tower, croissants, cool flag", but the **value vector**
+would emit, when that key vector gets selected, "Paris, France, located in Europe" -- you are getting the actual content of the token. this time, we can multiply QK<sup>T</sup> by the collection of **value vectors** (of shape
+`(B,T,16)`).
+
+we get a new matrix of shape `(B,T,16)`, this time mixed in with the value vectors.
+
+**congrats!** we have a self-attention matrix, where the tokens' original vectors, which were comprised on just loosely-based position and token embeddings, are now "improved" vectors that are better and more rich representations of that token,
+now including the **context** of previous tokens of the current batch they are in.
+
+## **acting upon attention**
+
+now, we have these new embeddings that are weighted sums of the content of the previous and current token/s. but we can add an additional layer to allow the model to act upon these newly-created embeddings. specifically, we can integrate a simple **FFN (feed-forward network)**
+that allows the model to "think" about the embeddings that were generated. in a more technical fashion, we can apply operations to turn the embeddings that are weighted sums of token into even better, more rich representations of the token by applying some non-linearity --
+we are **"improving"** the embeddings.
+
+we have an FFN layer that upsamples the dimension of the input vector from `N_EMBD` to `4 * N_EMBD`, then applies a ReLU operation on each of the vectors, then downsamples back to the original dimension size (384). since we upsample, we now can, reiterating something that was mentioned before,
+work in a larger vector space that emphasizes the rich representation and complexity of each vector, allowing us to capture key relationships that might be hidden in a smaller dimension.
+
+## multi-head attention
+
+with the one-head that performs all the attention computation, researchers wanted to improve upon that and make it so that one entire process of attention computation can be split into **different "heads" **where each head handles a split of the embedding. for instance, if we have a embedding with size
+`N_EMBD=384`, we can have 6 heads that each, instead of converting to a `N_EMBD`-sized vector, can convert instead to a `N_EMBD/6`-sized vector that each handles of a part of the original embedding vector for each token.
+
+**why do this?** as an analogy, imagine we have one teacher that is tasked with teaching, and consequently learning, math, english, science, history, and arts -- that's a lot of subjects for one teacher to learn. chances are, that teacher can't effectively understand all the key concepts and establish deep
+patterns within each subject to effectively teach students to master each respective subject. that is the consequence of having just one head that is responsible for creating an attention matrix that is tasked with learning **ALL the deep semantics within the batch**: understanding parentheses, punctuation, consonants,
+vowels, etc. but imagine if you had multiple "teachers" that were tasked for mastering and then teaching their own respective subject -- then the job becomes a lot of easier (teamwork is the dreamwork!) if we downsample the embedding vector to a smaller size, a size of factor `N_EMBD // N_HEADS`, and ask multiple heads, **each**
+of which can apply the same deep attention matrix to each "mini-batch", we get even more attention matrices for each of the sub-batches that allow for more complex relationships to be found.
+
+once each head computes their respective part, we concat everything together, back into a `N_EMBD`-sized vector, and run it through a projection layer, a simple linear layer, that mixes together the embeddings, and uses the concatenated values to get a better representation.
+
+## **self-attention and ffn's in one "block"**
+
+we talked about multi-head attention blocks and ffn's, and so far, we have talked about one iteration of the multi-head attention &rarr; ffn &rarr; result. however, the traditional "all you need is attention" paper combined this two-step process into one block, utilizing multiple blocks for computation. for instance, the original paper
+uses 3 of these "blocks" where before passing the result of the previous block into the next, we perform a `LayerNorm` operation, so that each vector can be normalized and the scale of what these vectors can be aren't too far apart in terms of scale.
+
+so the pipeline for this part would be x &rarr; Block<sub>1</sub> (Multi-Head | `LayerNorm` + FFN | `LayerNorm`) &rarr; Block<sub>2</sub> (Multi-Head | `LayerNorm` + FFN | `LayerNorm`) &rarr; Block<sub>3</sub> (Multi-Head | `LayerNorm` + FFN | `LayerNorm`).
+
+(note: since it becomes kind of "static" if `LayerNorm` just uses &mu; = 0 and &sigma; = 1 so these two become learned values in `LayerNorm` which can affect the distribution and anchor point just slightly)
+
+## **language-model head**
+
+wow! we have created an entire pipeline for getting the proper embeddings for each token. now, **how do we take these embeddings and turn them into the next token?** in our pipeline, we have one final trained `Linear` layer that learns to create a vector of size 65 that represents the embeddings for the next token. this layer in our pipeline
+is called `lm_head` and it means **language-modeling head**, and it's responsibility is as stated: turn contextual token embeddings into a prediction for the next token.
+
+now, in inference or generation, we can apply a `softmax` function that converts the vector into probabilities that sums to 1 across rows in the vector. so each token has a probability of being the next one.
+
+## final touches
+
+we apply `dropout` for key components that are really **complex** like attention or the ffn, etc. we do this because dropout prevents **overfitting** by dropping certain connections (chosen at random per iteration), forcing the model to take a different connection. this means that a model CANNOT be biased towards one connection and keep choosing that
+connection, which can be scary, because that can mean that it chooses it for every possible token, which is horrible! therefore, dropping certain connections during training can be helpful for exploring all possible connections and paths in the computational graph.
+
+## ending
+
+congrats! you know what pre-training of a decoder-only network at its simplest looks like! i had a lot of fun writing this, and i want to know if you need improvements so please let me know by emailing me, dm'ing me on X, dm'ing me on LinkedIn, and on, and on, and on... i will be improving this model however through different inference strategies like kv-caching or rotary
+embeddings or whatever else i can find, trying to improve my knowledge without using ai or vibe-coding.
